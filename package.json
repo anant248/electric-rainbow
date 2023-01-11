@@ -1,22 +1,17 @@
 {
-  "name": "electric-rainbow",
+  "dependencies": {
+    "electron": "^22.0.0",
+    "msgpackr": "^1.8.1"
+  },
+  "name": "synapserpc",
   "version": "1.0.0",
-  "description": "Audio visualizer and learning tool - a final year engineering capstone",
-  "main": "colorCode.js",
+  "main": "src/main.js",
+  "devDependencies": {},
   "scripts": {
+    "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/anant248/electric-rainbow.git"
-  },
-  "author": "Anant Goyal",
+  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/anant248/electric-rainbow/issues"
-  },
-  "homepage": "https://github.com/anant248/electric-rainbow#readme",
-  "dependencies": {
-    "rpio": "^8.18.0"
-  }
+  "description": ""
 }
