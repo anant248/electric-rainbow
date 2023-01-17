@@ -5,7 +5,7 @@ pull this branch / clone the repository into your system
 in terminal cd into the folder where you have this repository
 
 ### Step 2.
-in terminal run the command: npm init
+in terminal run the command: npm install
 This will install the required node dependencies from the package-lock.json file
 
 ### Step 3.
@@ -19,4 +19,4 @@ in one run: npm start
 this starts the electron app
 
 in the other run: pipenv run python3 main.py
-this runs the python file
+this runs the python file. Note the python command on your system may be slightly different - ex. pipenv run python main.py
