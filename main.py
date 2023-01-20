@@ -2,6 +2,7 @@ import msgpack
 import os
 import time
 import socket
+from random import *
 
 if __name__ == "__main__":
     print("Running...")
@@ -12,14 +13,22 @@ if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.connect((HOST, PORT)) # connect to server
 
-        i=0
+        r = 0
+        g = 0
+        b = 0
+        x = 0
+        y = 0
         while True:
-            i+=1
-            someArr = [i, i+1, i+2, i+3, i+4, i+5, i+6, i+7]
+            r = randint(0, 255) # generate a random number in range 0-255 representing rgb value
+            g = randint(0, 255)
+            b = randint(0, 255)
+            x = randint(0, 2000) # generate random number to represent x coordinate of particle
+            y = randint(0, 900) # generate random number to represent y coordinate of particle
+            someArr = [r, g, b, x, y]
             bts = msgpack.packb(someArr)
             sock.sendall(bts)
             print(bts)
-            time.sleep(0.0001)
+            time.sleep(0.05) # delay in sending data on TCP socket
 
     pass
 

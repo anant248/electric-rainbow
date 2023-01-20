@@ -5,11 +5,14 @@ const net = require('net');
 const { unpack } = require('msgpackr');
 const { app, BrowserWindow } = require('electron');
 
+// Disable chromium security warnings
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+
 const createWindow = () => {
     // Create the browser window
     const mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1000,
+        height: 800,
         webPreferences: {
             nodeIntegration: true,
             enableRemoteModule: true,
@@ -66,7 +69,7 @@ const server = net.createServer((socket) => {
             console.log(decoded); // log decoded data to node terminal
 
             const mainWindow = BrowserWindow.fromId(1);
-            mainWindow.webContents.send('update-counter', decoded);
+            mainWindow.webContents.send('raspberry-pi-data', decoded);
         } catch (err) {
             // Try again if buffer end not found (race condition)
             console.log("read fail...");

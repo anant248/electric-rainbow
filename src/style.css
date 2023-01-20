@@ -1,0 +1,29 @@
+#boxes{
+    width: 80%;
+    margin: auto;
+    text-align: center;
+}
+
+#btns{
+    padding: 20px;
+    background: cornsilk;
+    margin-bottom: 20px;
+}
+
+#btns button{
+    background: white;
+    padding: 5px 10px;
+    border: 0;
+}
+
+#btns .fa{
+    font-size: 30px;
+}
+
+#btns .fa-play-circle{
+    color: green;
+}
+
+#btns .fa-pause-circle{
+    color: red;
+}

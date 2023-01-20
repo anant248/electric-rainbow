@@ -1,5 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('electronAPI', {
-    onUpdateCounter: (callback) => ipcRenderer.on('update-counter', callback)
+    onUpdateUI: (callback) => ipcRenderer.on('raspberry-pi-data', callback)
 })
