@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "electron": "^22.0.0",
-    "msgpackr": "^1.8.1"
+    "msgpackr": "^1.8.1",
+    "three": "^0.148.0"
   },
   "name": "synapserpc",
   "version": "1.0.0",
