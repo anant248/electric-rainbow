@@ -1,3 +1,43 @@
+class Queue {
+    constructor() {
+      this.elements = {};
+      this.head = 0;
+      this.tail = 0;
+    }
+    enqueue(element) {
+      this.elements[this.tail] = element;
+      this.tail++;
+    }
+    dequeue() {
+      const item = this.elements[this.head];
+      delete this.elements[this.head];
+      this.head++;
+      return item;
+    }
+    peek() {
+      return this.elements[this.head];
+    }
+    get length() {
+      return this.tail - this.head;
+    }
+    get isEmpty() {
+      return this.length === 0;
+    }
+    get itemsAsArray() {
+        var somethingArr = new Array();
+
+        for (let i = this.head; i < this.tail; i++) {
+            somethingArr.push(this.elements[i]);
+        }
+
+        return somethingArr;
+    }
+    get items() {
+        return this.elements
+    }
+  }
+
+
 window.onload = function() {
     const counter = document.getElementById('counter')
     
@@ -18,10 +58,11 @@ window.onload = function() {
         var b = dataArray[2];
         var xCoordinate = dataArray[3];
         var yCoordinate = dataArray[4];
+        var pausePlayButton = dataArray[5];
+        var clearButton = dataArray[6];
         
         // Render methods to be called each time data is recieved
-        // TODO: update globally scoped object with more array elements
-        changeParticle(rgbToHex(r, g, b), xCoordinate, yCoordinate);
+        changeParticle(rgbToHex(r, g, b), xCoordinate, yCoordinate, pausePlayButton, clearButton);
         autoClick();
     })
     
@@ -36,10 +77,12 @@ window.onload = function() {
     var tap = ('ontouchstart' in window || navigator.msMaxTouchPoints) ? 'touchstart' : 'mousedown';
 
     var instrumentData = {}; // Globally scoped object
-    var changeParticle = (newColor, newXCoordinate, newYCoordinate) => {
+    var changeParticle = (newColor, newXCoordinate, newYCoordinate, newButton, newClear) => {
         instrumentData.color = newColor;
         instrumentData.x = newXCoordinate;
         instrumentData.y = newYCoordinate;
+        instrumentData.button = newButton;
+        instrumentData.clearButton = newClear
     }
     
     /* Helper function to rgbToHex */
@@ -96,7 +139,6 @@ window.onload = function() {
         p.x = x;
         p.y = y;
         p.color = color;
-        // p.color = colors[anime.random(0, colors.length - 1)];
         p.radius = anime.random(16, 32);
         p.endPos = setParticuleDirection(p);
         p.draw = function() {
@@ -144,40 +186,114 @@ window.onload = function() {
         }
       }
       
+      // Helper variables to hold the necessary timeline objects to generate a screenshot
+      var screenshotBufferSize = 100; 
+      var timelineQueue = new Queue();
+
       /* Animates the static particle object and circle objects
        * 
        * x: x coordinate of particle on canvas. This properties is affected by recieved input data
        * y: y coordinate of particle on canvas. This properties is affected by recieved input data
        */
-      function animateParticules(x, y, color) {
+      function animateParticules(x, y, color, pausePlayButton, clearButton) {
         var circle = createCircle(x, y, color);
         var particules = [];
         for (var i = 0; i < numberOfParticules; i++) {
           particules.push(createParticule(x, y, color));
         }
-        anime.timeline().add({
+
+        var fireworkTimeline = anime.timeline()
+
+        fireworkTimeline
+          .add({
           targets: particules,
           x: function(p) { return p.endPos.x; },
           y: function(p) { return p.endPos.y; },
           radius: 0.1,
           duration: anime.random(500, 25000),
           easing: 'easeOutExpo',
-          update: renderParticule
-        })
-          .add({
-          targets: circle,
-          radius: anime.random(80, 160),
-          lineWidth: 0,
-          alpha: {
-            value: 0,
-            easing: 'linear',
-            duration: anime.random(600, 800),  
-          },
-          duration: anime.random(1200, 1800),
-          easing: 'easeOutExpo',
           update: renderParticule,
-          offset: 0
         });
+        //   .add({
+        //   targets: circle,
+        //   radius: anime.random(80, 160),
+        //   lineWidth: 0,
+        //   alpha: {
+        //     value: 0,
+        //     easing: 'linear',
+        //     duration: anime.random(600, 800),  
+        //   },
+        //   duration: anime.random(1200, 1800),
+        //   easing: 'easeOutExpo',
+        //   update: renderParticule,
+        //   offset: 0
+        // });
+
+        // Save the timeline object in the Queue for screenshot generation
+        if(timelineQueue.length >= screenshotBufferSize){
+            timelineQueue.dequeue();
+        }
+        timelineQueue.enqueue(fireworkTimeline);
+
+        fireworkTimeline.finished.then(checkButtons(fireworkTimeline, pausePlayButton, clearButton));
+
+      }
+
+      async function checkButtons(animation, pauseButton, clearButton) {
+        if (pauseButton == 1) { // paused
+            console.log("Animation is currently paused " + pauseButton);
+            window.human = true;
+            
+            // Replay the buffered timeline objs
+            timelineArr = timelineQueue.itemsAsArray;
+            // timelineArr = timelineArr[0];
+
+            console.log(timelineArr);
+            console.log(timelineArr.length);
+            // console.log(timelineQueue.items);
+            // console.log(timelineQueue.items.length);
+
+            // console.log(timelineArr.length);
+            // console.log(timelineArr);
+            for (let i = 0; i < timelineArr.length; i++) {
+                const element = timelineArr[i];
+                // console.log(i)
+                console.log(element);
+                element.restart();
+                // element.seek(0)
+            }
+                // pauseButton = instrumentData.button
+                // if (pauseButton == 0) break;
+            // }
+            // for (let t in timelineArr) {
+            //         console.log(typeof(t))
+            //         // t.restart = true
+            // }
+            // }
+
+            // animation.pause();
+            // pauseAnimation(animation);
+        }
+        else if (pauseButton == 0) { // playing
+            animation.play();
+            console.log("Animation is currently playing " + pauseButton);
+        }
+
+        if (clearButton == 1) { // clear canvas
+            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+            console.log("Clearing Canvas now: ", clearButton);
+        }
+      }
+
+      function getTargets(ani) {
+        return ani.children.reduce(
+          (all, one) => all.concat(getTargets(one)),
+          ani.animatables.map((a) => a.target)
+        )
+      }
+      
+      function pauseAnimation(ani) {
+        getTargets(ani).forEach(anime.remove);
       }
       
       var render = anime({
@@ -201,17 +317,12 @@ window.onload = function() {
        * by calling animatePartcules
        */
       function autoClick() {
+        if (instrumentData.button == 0) window.human = false;
         if (window.human) return;
-        animateParticules(instrumentData.x, instrumentData.y, instrumentData.color);
-        // anime({duration: 200}).finished.then(autoClick);
+        animateParticules(instrumentData.x, instrumentData.y, instrumentData.color, instrumentData.button, instrumentData.clearButton);
       }
       
-    //   autoClick();
       setCanvasSize();
       window.addEventListener('resize', setCanvasSize, false);
       
 }
-    
-    //   // button handling
-    //   document.querySelector('#boxes .play').onclick = autoClick.play;
-    //   document.querySelector('#boxes .pause').onclick = autoClick.pause;
