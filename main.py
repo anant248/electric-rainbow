@@ -20,7 +20,7 @@ def clearCanvas():
             clearButton = 0
 
         print(clearButton)
-        time.sleep(2)
+        time.sleep(3)
 
 def buttonSwitch():
     global pausePlayButton
@@ -32,7 +32,7 @@ def buttonSwitch():
             pausePlayButton = 1
 
         print(pausePlayButton)
-        time.sleep(5)
+        time.sleep(10)
 
 def dataSend():
     HOST = "127.0.0.1"
@@ -40,7 +40,6 @@ def dataSend():
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.connect((HOST, PORT)) # connect to server
-
         r = 0
         g = 0
         b = 0
@@ -52,7 +51,7 @@ def dataSend():
             b = randint(0, 255)
             x = randint(0, 2000) # generate random number to represent x coordinate of particle
             y = randint(0, 900) # generate random number to represent y coordinate of particle
-            someArr = [r, g, b, x, y, pausePlayButton, 0]
+            someArr = [r, g, b, x, y, pausePlayButton, clearButton]
             bts = msgpack.packb(someArr)
             sock.sendall(bts)
             print(bts)

@@ -39,8 +39,7 @@ class Queue {
 
 
 window.onload = function() {
-    const counter = document.getElementById('counter')
-    
+
     /* 
      * This function is a callback to data being recieved on the raspberry-pi-data channel
      * 
@@ -66,15 +65,13 @@ window.onload = function() {
         autoClick();
     })
     
-    // TODO: remove if 'tap' event listener is not used
-    window.human = false;
+    // flag that changes based on pause/play button
+    // true when UI is paused, false otherwise
+    window.human = true;
 
     var canvasEl = document.querySelector('.fireworks');
     var ctx = canvasEl.getContext('2d');
     var numberOfParticules = 30;
-    var pointerX = 0;
-    var pointerY = 0;
-    var tap = ('ontouchstart' in window || navigator.msMaxTouchPoints) ? 'touchstart' : 'mousedown';
 
     var instrumentData = {}; // Globally scoped object
     var changeParticle = (newColor, newXCoordinate, newYCoordinate, newButton, newClear) => {
@@ -109,12 +106,6 @@ window.onload = function() {
         canvasEl.style.height = window.innerHeight + 'px';
         canvasEl.getContext('2d').scale(2, 2);
 
-      }
-      
-      // TODO: remove if 'tap' event listener is not used
-      function updateCoords(e) {
-        pointerX = e.clientX || e.touches[0].clientX;
-        pointerY = e.clientY || e.touches[0].clientY;
       }
       
       /* Sets size and direction of particle on canvas */
@@ -235,65 +226,37 @@ window.onload = function() {
         }
         timelineQueue.enqueue(fireworkTimeline);
 
-        fireworkTimeline.finished.then(checkButtons(fireworkTimeline, pausePlayButton, clearButton));
-
+        // button handling: each time animation is called, check the status of the buttons
+        fireworkTimeline.finished.then(checkButtons(pausePlayButton, clearButton));
       }
 
-      async function checkButtons(animation, pauseButton, clearButton) {
+      /* Checks the status of the pause/play and clear button
+       * 
+       * pauseButton: flips between 0 and 1, 0 indicating animation is playing and 1 indicating animation is paused
+       * clearButton: flips between 0 and 1, 0 indicating do not clear canvas and 1 indicating clear canvas
+       */
+      function checkButtons(pauseButton, clearButton) {
         if (pauseButton == 1) { // paused
             console.log("Animation is currently paused " + pauseButton);
             window.human = true;
             
             // Replay the buffered timeline objs
             timelineArr = timelineQueue.itemsAsArray;
-            // timelineArr = timelineArr[0];
 
-            console.log(timelineArr);
-            console.log(timelineArr.length);
-            // console.log(timelineQueue.items);
-            // console.log(timelineQueue.items.length);
-
-            // console.log(timelineArr.length);
-            // console.log(timelineArr);
             for (let i = 0; i < timelineArr.length; i++) {
                 const element = timelineArr[i];
-                // console.log(i)
-                console.log(element);
                 element.restart();
-                // element.seek(0)
             }
-                // pauseButton = instrumentData.button
-                // if (pauseButton == 0) break;
-            // }
-            // for (let t in timelineArr) {
-            //         console.log(typeof(t))
-            //         // t.restart = true
-            // }
-            // }
-
-            // animation.pause();
-            // pauseAnimation(animation);
         }
         else if (pauseButton == 0) { // playing
-            animation.play();
             console.log("Animation is currently playing " + pauseButton);
+            window.human = false;
         }
 
-        if (clearButton == 1) { // clear canvas
-            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+        if (clearButton == 1) { // clear canvas - this instance only gets triggered if canvas is cleared while UI is playing
             console.log("Clearing Canvas now: ", clearButton);
+            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
         }
-      }
-
-      function getTargets(ani) {
-        return ani.children.reduce(
-          (all, one) => all.concat(getTargets(one)),
-          ani.animatables.map((a) => a.target)
-        )
-      }
-      
-      function pauseAnimation(ani) {
-        getTargets(ani).forEach(anime.remove);
       }
       
       var render = anime({
@@ -302,27 +265,28 @@ window.onload = function() {
           ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
         }
       });
-      
-    //   document.addEventListener(tap, function(e) {
-    //     window.human = true;
-    //     render.play();
-    //     updateCoords(e);
-    //     animateParticules(pointerX, pointerY);
-    //   }, false);
-      
-      var centerX = window.innerWidth / 2;
-      var centerY = window.innerHeight / 2;
-      
+
       /* Simulates a click on the screen, which triggers the particle animation response
        * by calling animatePartcules
        */
       function autoClick() {
+        // switch flag to false when UI is playing
         if (instrumentData.button == 0) window.human = false;
+
+        // clear canvas if UI is paused
+        if (instrumentData.button == 1 && instrumentData.clearButton == 1) {
+          console.log("Clearing Canvas now: ", instrumentData.clearButton);
+          ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+        }
+
+        // if flag is true (UI is paused), do nothing within autoClick()
+        // else flag is false (UI is playing), animateParticules()
         if (window.human) return;
-        animateParticules(instrumentData.x, instrumentData.y, instrumentData.color, instrumentData.button, instrumentData.clearButton);
+        else animateParticules(instrumentData.x, instrumentData.y, instrumentData.color, instrumentData.button, instrumentData.clearButton);
       }
       
+      // initialize canvas
       setCanvasSize();
+      // event listener for resizing window
       window.addEventListener('resize', setCanvasSize, false);
-      
 }
