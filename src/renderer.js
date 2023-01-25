@@ -1,5 +1,7 @@
 window.onload = function() {
-    const counter = document.getElementById('counter')
+    const counter = document.getElementById('counter');
+    const playButton = document.querySelector('#boxes .play');
+    const pauseButton = document.querySelector('#boxes .pause');
     
     /* 
      * This function is a callback to data being recieved on the raspberry-pi-data channel
@@ -26,7 +28,7 @@ window.onload = function() {
     })
     
     // TODO: remove if 'tap' event listener is not used
-    window.human = false;
+    window.human = true;
 
     var canvasEl = document.querySelector('.fireworks');
     var ctx = canvasEl.getContext('2d');
@@ -155,15 +157,19 @@ window.onload = function() {
         for (var i = 0; i < numberOfParticules; i++) {
           particules.push(createParticule(x, y, color));
         }
-        anime.timeline().add({
-          targets: particules,
-          x: function(p) { return p.endPos.x; },
-          y: function(p) { return p.endPos.y; },
-          radius: 0.1,
-          duration: anime.random(500, 25000),
-          easing: 'easeOutExpo',
-          update: renderParticule
-        })
+
+        var fireworkTimeline = new anime.timeline({ })
+        
+        fireworkTimeline
+          .add({
+            targets: particules,
+            x: function(p) { return p.endPos.x; },
+            y: function(p) { return p.endPos.y; },
+            radius: 0.1,
+            duration: anime.random(500, 25000),
+            easing: 'easeOutExpo',
+            update: renderParticule
+          })
           .add({
           targets: circle,
           radius: anime.random(80, 160),
@@ -178,6 +184,22 @@ window.onload = function() {
           update: renderParticule,
           offset: 0
         });
+
+        // button handling
+        pauseButton.addEventListener('click', function() {
+            window.human = true;
+            pauseAnimation(fireworkTimeline)
+        }, false);
+
+        // playButton.addEventListener('click', function() {
+        //     window.human = false;
+        //     fireworkTimeline.restart;
+        //     autoClick();
+        //     fireworkTimeline.play;
+        // }, false);
+
+        // playButton.onclick = fireworkTimeline.play;
+        // pauseButton.onclick = fireworkTimeline.pause;
       }
       
       var render = anime({
@@ -186,7 +208,30 @@ window.onload = function() {
           ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
         }
       });
-      
+
+      playButton.addEventListener('click', function() {
+          window.human = false;
+        //   autoClick();
+        //   fireworkTimeline.play();
+      }, false);
+
+    //   pauseButton.addEventListener('click', function() {
+    //     window.human = true;
+    //     // fireworkTimeline.pause();
+    //   }, false);
+
+      function pauseAnimation(animation) {
+          getTargets(animation).forEach(anime.remove);
+        //   animation.restart();
+      }
+
+      function getTargets(animation) {
+          return animation.children.reduce(
+              (all, one) => all.concat(getTargets(one)),
+              animation.animatables.map((a) => a.target)
+          )
+      }
+
     //   document.addEventListener(tap, function(e) {
     //     window.human = true;
     //     render.play();
@@ -204,14 +249,10 @@ window.onload = function() {
         if (window.human) return;
         animateParticules(instrumentData.x, instrumentData.y, instrumentData.color);
         // anime({duration: 200}).finished.then(autoClick);
-      }
-      
-    //   autoClick();
-      setCanvasSize();
-      window.addEventListener('resize', setCanvasSize, false);
+    }
+    
+    // autoClick();
+    setCanvasSize();
+    window.addEventListener('resize', setCanvasSize, false);
       
 }
-    
-    //   // button handling
-    //   document.querySelector('#boxes .play').onclick = autoClick.play;
-    //   document.querySelector('#boxes .pause').onclick = autoClick.pause;
