@@ -1,7 +1,5 @@
 window.onload = function() {
     const counter = document.getElementById('counter');
-    const playButton = document.querySelector('#boxes .play');
-    const pauseButton = document.querySelector('#boxes .pause');
     
     /* 
      * This function is a callback to data being recieved on the raspberry-pi-data channel
@@ -20,28 +18,29 @@ window.onload = function() {
         var b = dataArray[2];
         var xCoordinate = dataArray[3];
         var yCoordinate = dataArray[4];
+        var pausePlayButton = dataArray[5];
+        var clearButton = dataArray[6];
         
         // Render methods to be called each time data is recieved
-        // TODO: update globally scoped object with more array elements
-        changeParticle(rgbToHex(r, g, b), xCoordinate, yCoordinate);
+        changeParticle(rgbToHex(r, g, b), xCoordinate, yCoordinate, pausePlayButton, clearButton);
         autoClick();
     })
     
-    // TODO: remove if 'tap' event listener is not used
+    // flag that changes based on pause/play button
+    // true when UI is paused, false otherwise
     window.human = true;
 
     var canvasEl = document.querySelector('.fireworks');
     var ctx = canvasEl.getContext('2d');
     var numberOfParticules = 30;
-    var pointerX = 0;
-    var pointerY = 0;
-    var tap = ('ontouchstart' in window || navigator.msMaxTouchPoints) ? 'touchstart' : 'mousedown';
 
     var instrumentData = {}; // Globally scoped object
-    var changeParticle = (newColor, newXCoordinate, newYCoordinate) => {
+    var changeParticle = (newColor, newXCoordinate, newYCoordinate, newButton, newClear) => {
         instrumentData.color = newColor;
         instrumentData.x = newXCoordinate;
         instrumentData.y = newYCoordinate;
+        instrumentData.button = newButton;
+        instrumentData.clearButton = newClear;
     }
     
     /* Helper function to rgbToHex */
@@ -70,12 +69,6 @@ window.onload = function() {
 
       }
       
-      // TODO: remove if 'tap' event listener is not used
-      function updateCoords(e) {
-        pointerX = e.clientX || e.touches[0].clientX;
-        pointerY = e.clientY || e.touches[0].clientY;
-      }
-      
       /* Sets size and direction of particle on canvas */
       function setParticuleDirection(p) {
         var angle = anime.random(0, 360) * Math.PI / 180;
@@ -98,7 +91,6 @@ window.onload = function() {
         p.x = x;
         p.y = y;
         p.color = color;
-        // p.color = colors[anime.random(0, colors.length - 1)];
         p.radius = anime.random(16, 32);
         p.endPos = setParticuleDirection(p);
         p.draw = function() {
@@ -151,7 +143,7 @@ window.onload = function() {
        * x: x coordinate of particle on canvas. This properties is affected by recieved input data
        * y: y coordinate of particle on canvas. This properties is affected by recieved input data
        */
-      function animateParticules(x, y, color) {
+      function animateParticules(x, y, color, pausePlayButton, clearButton) {
         var circle = createCircle(x, y, color);
         var particules = [];
         for (var i = 0; i < numberOfParticules; i++) {
@@ -166,7 +158,7 @@ window.onload = function() {
             x: function(p) { return p.endPos.x; },
             y: function(p) { return p.endPos.y; },
             radius: 0.1,
-            duration: anime.random(500, 25000),
+            duration: anime.random(500, 2000),
             easing: 'easeOutExpo',
             update: renderParticule
           })
@@ -185,46 +177,34 @@ window.onload = function() {
           offset: 0
         });
 
-        // button handling
-        pauseButton.addEventListener('click', function() {
-            window.human = true;
-            pauseAnimation(fireworkTimeline)
-        }, false);
-
-        // playButton.addEventListener('click', function() {
-        //     window.human = false;
-        //     fireworkTimeline.restart;
-        //     autoClick();
-        //     fireworkTimeline.play;
-        // }, false);
-
-        // playButton.onclick = fireworkTimeline.play;
-        // pauseButton.onclick = fireworkTimeline.pause;
+        // button handling: each time animation is called, check the status of the buttons
+        fireworkTimeline.finished.then(checkButtons(fireworkTimeline, pausePlayButton, clearButton));
       }
-      
-      var render = anime({
-        duration: Infinity,
-        update: function() {
-          ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+      /* Checks the status of the pause/play and clear button
+       * 
+       * animation: the animation timeline to be paused or played
+       * pauseButton: flips between 0 and 1, 0 indicating animation is playing and 1 indicating animation is paused
+       * clearButton: flips between 0 and 1, 0 indicating do not clear canvas and 1 indicating clear canvas
+       */
+      function checkButtons(animation, pauseButton, clearButton) {
+        if (pauseButton == 1) { // paused
+          console.log("Animation is currently paused " + pauseButton);
+          window.human = true;
+          pauseAnimation(animation);
         }
-      });
+        else if (pauseButton == 0) { // playing
+            console.log("Animation is currently playing " + pauseButton);
+            window.human = false;
+        }
 
-      playButton.addEventListener('click', function() {
-          window.human = false;
-        //   autoClick();
-        //   fireworkTimeline.play();
-      }, false);
+        if (clearButton == 1) { // clear canvas - this instance only gets triggered if canvas is cleared while UI is playing
+            console.log("Clearing Canvas now: ", clearButton);
+            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+        }
+    }
 
-    //   pauseButton.addEventListener('click', function() {
-    //     window.human = true;
-    //     // fireworkTimeline.pause();
-    //   }, false);
-
-      function pauseAnimation(animation) {
-          getTargets(animation).forEach(anime.remove);
-        //   animation.restart();
-      }
-
+      /* Helper function to pauseAnimation */
       function getTargets(animation) {
           return animation.children.reduce(
               (all, one) => all.concat(getTargets(one)),
@@ -232,27 +212,37 @@ window.onload = function() {
           )
       }
 
-    //   document.addEventListener(tap, function(e) {
-    //     window.human = true;
-    //     render.play();
-    //     updateCoords(e);
-    //     animateParticules(pointerX, pointerY);
-    //   }, false);
-      
-      var centerX = window.innerWidth / 2;
-      var centerY = window.innerHeight / 2;
-      
+      /* pauses the current onscreen animation by removing all active canvas elements from animation timeline
+       * method used by checkButtons()
+       *
+       * animation: the animation timeline containing the elements needing to be removed
+       */
+      function pauseAnimation(animation) {
+          getTargets(animation).forEach(anime.remove);
+      }
+
+
       /* Simulates a click on the screen, which triggers the particle animation response
        * by calling animatePartcules
        */
       function autoClick() {
+        // switch flag to false when UI is playing
+        if (instrumentData.button == 0) window.human = false;
+
+        // clear canvas if UI is paused
+        if (instrumentData.button == 1 && instrumentData.clearButton == 1) {
+          console.log("Clearing Canvas now: ", instrumentData.clearButton);
+          ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+        }
+
+        // if flag is true (UI is paused), do nothing within autoClick()
+        // else flag is false (UI is playing), animateParticules()
         if (window.human) return;
-        animateParticules(instrumentData.x, instrumentData.y, instrumentData.color);
-        // anime({duration: 200}).finished.then(autoClick);
+        else animateParticules(instrumentData.x, instrumentData.y, instrumentData.color, instrumentData.button, instrumentData.clearButton);
     }
     
-    // autoClick();
+    // initialize canvas
     setCanvasSize();
+    // event listener for resizing window
     window.addEventListener('resize', setCanvasSize, false);
-      
 }
