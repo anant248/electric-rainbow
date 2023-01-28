@@ -3,7 +3,7 @@
     "electron": "^22.0.0",
     "msgpackr": "^1.8.1"
   },
-  "name": "synapserpc",
+  "name": "electric-rainbow",
   "version": "1.0.0",
   "main": "src/main.js",
   "devDependencies": {},

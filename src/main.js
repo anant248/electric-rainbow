@@ -79,7 +79,7 @@ const server = net.createServer((socket) => {
 });
 
 // Listen on 'localhost'
-server.listen(9000, "127.0.0.1", () => {
+server.listen(9000, "192.168.2.1", () => {
   console.log('server bound');
 });
 

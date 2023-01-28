@@ -35,7 +35,7 @@ def buttonSwitch():
         time.sleep(10)
 
 def dataSend():
-    HOST = "127.0.0.1"
+    HOST = "192.168.2.1"
     PORT = 9000
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -54,21 +54,23 @@ def dataSend():
             someArr = [r, g, b, x, y, pausePlayButton, clearButton]
             bts = msgpack.packb(someArr)
             sock.sendall(bts)
-            print(bts)
             time.sleep(0.03) # delay in sending data on TCP socket
 
 if __name__ == "__main__":
     print("Running...")
 
-    p1 = threading.Thread(target=buttonSwitch)
+    p1 = threading.Thread(target=buttonSwitch, daemon=True)
     p1.start()
 
-    p2 = threading.Thread(target=dataSend)
+    p2 = threading.Thread(target=dataSend, daemon=True)
     p2.start()
 
-    p3 = threading.Thread(target=clearCanvas)
+    p3 = threading.Thread(target=clearCanvas, daemon=True)
     p3.start()
 
-    p1.join()
-    p2.join()
-    p3.join()
+    try:
+        p1.join()
+        p2.join()
+        p3.join()
+    except KeyboardInterrupt:
+        print("Exiting Python gracefully?")
