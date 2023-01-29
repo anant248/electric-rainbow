@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "base64-to-image": "^1.0.2",
     "electron": "^22.0.0",
     "html2canvas": "^1.4.1",
     "msgpackr": "^1.8.1"
