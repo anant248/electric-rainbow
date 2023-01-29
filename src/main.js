@@ -25,6 +25,10 @@ const createWindow = () => {
 
     // open the DevTools
     mainWindow.webContents.openDevTools();
+
+    // maximize the main window
+    mainWindow.maximize();
+    // mainWindow.setFullScreen(true);
 };
 
 // this method will be called when electron has finished initialization and is ready to create browser windows
