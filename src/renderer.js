@@ -39,6 +39,14 @@ class Queue {
   }
 }
 
+
+
+let btnStatus = 0;
+const mainCanvas = document.getElementById("mainCanvas");
+const btnIcon = document.getElementById("btnIcon");
+const PLAY_ICON_CLASS = "fa fa-play-circle";
+const PAUSE_ICON_CLASS = "fa fa-pause-circle";
+
 window.onload = function () {
   /*
    * This function is a callback to data being recieved on the raspberry-pi-data channel
@@ -71,14 +79,42 @@ window.onload = function () {
   });
 
   // Adding the takeScreenshot function as event handler for the screenshot button
+  // We must add the await keyword here again because the function was not returning the desired
+  // screenshot fast enough, so base64Image was undefined (see notes in the takeScreenshot() function)
   document.getElementById("screenshotBtn").addEventListener(
     "click",
     async () => {
-      const base64Image = await takeScreenshot();
-      window.electronAPI.sendImage(base64Image);
+      if ( btnStatus == 0){
+        btnStatus = 1;
+        let tempArray = await takeScreenshot();
+        const base64Image = tempArray[0];
+        let newCanvas = tempArray[1]
+        replaceMainCanvas(newCanvas);
+        document.getElementById("btn-icon").className = PLAY_ICON_CLASS;
+        window.electronAPI.sendImage(base64Image);
+      } else if (btnStatus == 1){
+        let newCanvas = document.getElementById("newCanvas");
+        newCanvas.remove();
+        //mainCanvas = document.getElementById("mainCanvas");
+        mainCanvas.style.display = "block";
+        btnStatus = 0;
+        document.getElementById("btn-icon").className = PAUSE_ICON_CLASS;
+
+      }
     },
     false
   );
+
+  function replaceMainCanvas(newCanvas){
+    //mainCanvas = document.getElementById("mainCanvas");
+    // Giving Canvas an id
+    newCanvas.id = "newCanvas";
+    // Add the new canvas to the same parent element as the screenshot canvas
+    mainCanvas.parentNode.insertBefore(newCanvas, mainCanvas);
+    // Hide the screenshot canvas by setting its display style to "none"
+    mainCanvas.style.display = "none";
+    // You can restore the original canvas by setting its display style back to "block"
+  }
 
   // flag that changes based on pause/play button
   // true when UI is paused, false otherwise
@@ -258,7 +294,7 @@ window.onload = function () {
    * clearButton: flips between 0 and 1, 0 indicating do not clear canvas and 1 indicating clear canvas
    */
   async function takeScreenshot() {
-    const screenshotTarget = document.getElementById("screenshot");
+    const screenshotTarget = document.getElementById("mainCanvas");
 
     // This function originally looked like the commented out code below. However this
     // was not working and returned undefined because the code kept running and the return
@@ -266,8 +302,9 @@ window.onload = function () {
     // it was sent to main.js. this was fixed by adding the await keyword before html2canvas
     // to make sure that a value was returned before moving on to the next line of code. This
     // necessitated that we make takescreenshot() asyncronous as well (instead of using then)
-    const canvas = await html2canvas(screenshotTarget);
-    let base64image = canvas.toDataURL("image/png");
+    const newCanvas = await html2canvas(screenshotTarget);
+
+    const base64image = newCanvas.toDataURL("image/png");
 
     // html2canvas(screenshotTarget).then((canvas) => {
     //   base64image = canvas.toDataURL("image/png");
@@ -279,7 +316,10 @@ window.onload = function () {
     //   // window.location.href = base64image;
     //   return base64image;
     // });
-    return base64image;
+    return [base64image, newCanvas];
+  
+  
+    
 
     // if (screenshotBtn == 1) { // paused
     //     console.log("Animation is currently paused " + screenshotBtn);

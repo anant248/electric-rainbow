@@ -30,7 +30,9 @@ const createWindow = () => {
 
   // this was taken from the example here : https://www.electronjs.org/docs/latest/tutorial/ipc#ipc-channels
   // it handles the sent screenshot(base64image string) from render.js turns it to an
-  // image using the base64toimage package and downloads it to the data folder
+  // image using the base64toimage package and downloads it to the data folder...
+  // **turns out that the base64image package turns it into an imageInfo object (node), I couldn't figure out 
+  // how to download this so Ijust used the fs.writeFile on the base64 string and it worked!
   ipcMain.on("send-image", (event, image) => {
     const webContents = event.sender;
     // we don't need to use console.log to debug, you can debug in vs code:
@@ -45,13 +47,13 @@ const createWindow = () => {
     //var optionalObj = {'fileName': 'imageFileName', 'type':'png'};
     // by default the file name is "Img" + current date string, and type is png
 
-    base64ToImage(base64Str, path);
+    //base64ToImage(base64Str, path);
 
     //Note base64ToImage function returns imageInfo which is an object with imageType and fileName.
-    var imageInfo = base64ToImage(base64Str, path); //,optionalObj);
+    //var imageInfo = base64ToImage(base64Str, path); //,optionalObj);\\don't knmow how to save this?
     var data = base64Str.replace(/^data:image\/\w+;base64,/, "");
     var buf = Buffer.from(data, "base64");
-    fs.writeFile("image.png", buf, (err) => {
+    fs.writeFile("./data/image.png", buf, (err) => {
       if (err) console.log(err);
       else {
         console.log("File written successfully\n");
