@@ -1,7 +1,6 @@
 window.onload = function() {
     const counter = document.getElementById('counter');
-    const mainCanvas = document.getElementById("mainCanvas");
-    let btnStatus = 0;
+    const mainCanvas = document.getElementById('mainCanvas');
     
     /* 
      * This function is a callback to data being recieved on the raspberry-pi-data channel
@@ -202,7 +201,7 @@ window.onload = function() {
             window.human = false;
         }
 
-        if (clearButton == 1) { // clear canvas - this instance only gets triggered if canvas is cleared while UI is playing
+        if (clearButton == 0) { // clear canvas - this instance only gets triggered if canvas is cleared while UI is playing
             console.log("Clearing Canvas now: ", clearButton);
             ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
         }
@@ -225,12 +224,9 @@ window.onload = function() {
           getTargets(animation).forEach(anime.remove);
       }
 
-      // async function beginScreenshotAction() {
-      //   let tempArray = await takeScreenshot();
-      //   const base64Image = tempArray[0];
-      //   window.electronAPI.sendImage(base64Image);
-      // }
-
+      /* 
+       * takes a screenshot of current canvas and sends it to the main process to be saved as a png in local folder
+       */
       async function takeScreenshot() {
         const screenshotTarget = document.getElementById("mainCanvas");
         const newCanvas = await html2canvas(screenshotTarget);
@@ -248,7 +244,7 @@ window.onload = function() {
         if (instrumentData.button == 0) window.human = false;
 
         // clear canvas if UI is paused
-        if (instrumentData.button == 1 && instrumentData.clearButton == 1) {
+        if (instrumentData.button == 1 && instrumentData.clearButton == 0) {
           console.log("Clearing Canvas now: ", instrumentData.clearButton);
           ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
         }
