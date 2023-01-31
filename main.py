@@ -75,7 +75,7 @@ def dataSend():
             b = randint(0, 255)
             x = randint(0, 2000) # generate random number to represent x coordinate of particle
             y = randint(0, 900) # generate random number to represent y coordinate of particle
-            someArr = [r, g, b, x, y, pausePlayButton, clearButton]
+            someArr = [r, g, b, x, y, pausePlayButton, clearButton, screenshotButton]
             bts = msgpack.packb(someArr)
             sock.sendall(bts)
             time.sleep(0.03) # delay in sending data on TCP socket

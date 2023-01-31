@@ -1,5 +1,7 @@
 window.onload = function() {
     const counter = document.getElementById('counter');
+    const mainCanvas = document.getElementById("mainCanvas");
+    let btnStatus = 0;
     
     /* 
      * This function is a callback to data being recieved on the raspberry-pi-data channel
@@ -20,9 +22,10 @@ window.onload = function() {
         var yCoordinate = dataArray[4];
         var pausePlayButton = dataArray[5];
         var clearButton = dataArray[6];
+        var screenshotButton = dataArray[7];
         
         // Render methods to be called each time data is recieved
-        changeParticle(rgbToHex(r, g, b), xCoordinate, yCoordinate, pausePlayButton, clearButton);
+        changeParticle(rgbToHex(r, g, b), xCoordinate, yCoordinate, pausePlayButton, clearButton, screenshotButton);
         autoClick();
     })
     
@@ -35,12 +38,13 @@ window.onload = function() {
     var numberOfParticules = 30;
 
     var instrumentData = {}; // Globally scoped object
-    var changeParticle = (newColor, newXCoordinate, newYCoordinate, newButton, newClear) => {
+    var changeParticle = (newColor, newXCoordinate, newYCoordinate, newButton, newClear, newScreenshot) => {
         instrumentData.color = newColor;
         instrumentData.x = newXCoordinate;
         instrumentData.y = newYCoordinate;
         instrumentData.button = newButton;
         instrumentData.clearButton = newClear;
+        instrumentData.screenshotButton = newScreenshot;
     }
     
     /* Helper function to rgbToHex */
@@ -221,6 +225,20 @@ window.onload = function() {
           getTargets(animation).forEach(anime.remove);
       }
 
+      // async function beginScreenshotAction() {
+      //   let tempArray = await takeScreenshot();
+      //   const base64Image = tempArray[0];
+      //   window.electronAPI.sendImage(base64Image);
+      // }
+
+      async function takeScreenshot() {
+        const screenshotTarget = document.getElementById("mainCanvas");
+        const newCanvas = await html2canvas(screenshotTarget);
+        const base64image = newCanvas.toDataURL("image/png");
+
+        window.electronAPI.sendImage(base64image);
+      }
+
 
       /* Simulates a click on the screen, which triggers the particle animation response
        * by calling animatePartcules
@@ -233,6 +251,11 @@ window.onload = function() {
         if (instrumentData.button == 1 && instrumentData.clearButton == 1) {
           console.log("Clearing Canvas now: ", instrumentData.clearButton);
           ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+        }
+
+        // take screenshot if screenshot button is 1
+        if (instrumentData.screenshotButton == 1) {
+          takeScreenshot();
         }
 
         // if flag is true (UI is paused), do nothing within autoClick()

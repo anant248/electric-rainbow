@@ -3,7 +3,7 @@ const path = require('path');
 const net = require('net');
 
 const { unpack } = require('msgpackr');
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 
 // Disable chromium security warnings
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
@@ -89,4 +89,18 @@ server.listen(9000, "192.168.2.1", () => {
 
 server.on('error', (err) => {
   throw err;
+});
+
+// Listen for IPC between renderer and main
+ipcMain.on("send-image", (image) => {
+    var base64Str = image;
+    
+    var data = base64Str.replace(/^data:image\/\w+;base64,/, "");
+    var buf = Buffer.from(data, "base64");
+    fs.writeFile("./data/image.png", buf, (err) => {
+        if (err) console.log(err);
+        else {
+            console.log("File written successfully\n");
+        }
+    });
 });
