@@ -156,15 +156,15 @@ window.onload = function() {
         var fireworkTimeline = new anime.timeline({ })
         
         fireworkTimeline
-          .add({
-            targets: particules,
-            x: function(p) { return p.endPos.x; },
-            y: function(p) { return p.endPos.y; },
-            radius: 0.1,
-            duration: anime.random(500, 2000),
-            easing: 'easeOutExpo',
-            update: renderParticule
-          })
+          // .add({
+          //   targets: particules,
+          //   x: function(p) { return p.endPos.x; },
+          //   y: function(p) { return p.endPos.y; },
+          //   radius: 0.1,
+          //   duration: anime.random(500, 2000),
+          //   easing: 'easeOutExpo',
+          //   update: renderParticule
+          // })
           .add({
           targets: circle,
           radius: anime.random(80, 160),
@@ -191,12 +191,12 @@ window.onload = function() {
        * clearButton: flips between 0 and 1, 0 indicating do not clear canvas and 1 indicating clear canvas
        */
       function checkButtons(animation, pauseButton, clearButton) {
-        if (pauseButton == 1) { // paused
+        if (pauseButton == 0) { // paused
           console.log("Animation is currently paused " + pauseButton);
           window.human = true;
           pauseAnimation(animation);
         }
-        else if (pauseButton == 0) { // playing
+        else if (pauseButton == 1) { // playing
             console.log("Animation is currently playing " + pauseButton);
             window.human = false;
         }
@@ -241,17 +241,18 @@ window.onload = function() {
        */
       function autoClick() {
         // switch flag to false when UI is playing
-        if (instrumentData.button == 0) window.human = false;
+        if (instrumentData.button == 1) window.human = false;
 
         // clear canvas if UI is paused
-        if (instrumentData.button == 1 && instrumentData.clearButton == 0) {
+        if (instrumentData.button == 0 && instrumentData.clearButton == 0) {
           console.log("Clearing Canvas now: ", instrumentData.clearButton);
           ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
         }
 
-        // take screenshot if screenshot button is 1
-        if (instrumentData.screenshotButton == 1) {
+        // take screenshot if screenshot button is 0
+        if (instrumentData.screenshotButton == 0) {
           takeScreenshot();
+          console.log("Screenshot taken!")
         }
 
         // if flag is true (UI is paused), do nothing within autoClick()

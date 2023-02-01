@@ -83,7 +83,7 @@ const server = net.createServer((socket) => {
 });
 
 // Listen on 'localhost'
-server.listen(9000, "192.168.2.1", () => {
+server.listen(9000, "127.0.0.1", () => {
   console.log('server bound');
 });
 
@@ -92,7 +92,7 @@ server.on('error', (err) => {
 });
 
 // Listen for IPC between renderer and main
-ipcMain.on("send-image", (image) => {
+ipcMain.on("send-image", (event, image) => {
     var base64Str = image;
     
     var data = base64Str.replace(/^data:image\/\w+;base64,/, "");
