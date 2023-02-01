@@ -24,7 +24,7 @@ const createWindow = () => {
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
     // open the DevTools
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
 
     // maximize the main window
     mainWindow.maximize();
@@ -83,7 +83,7 @@ const server = net.createServer((socket) => {
 });
 
 // Listen on 'localhost'
-server.listen(9000, "127.0.0.1", () => {
+server.listen(9000, "192.168.2.1", () => {
   console.log('server bound');
 });
 

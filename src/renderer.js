@@ -69,7 +69,8 @@ window.onload = function() {
         canvasEl.style.width = window.innerWidth + 'px';
         canvasEl.style.height = window.innerHeight + 'px';
         canvasEl.getContext('2d').scale(2, 2);
-
+        // ctx.fillStyle = "black";
+        // ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
       }
       
       /* Sets size and direction of particle on canvas */
@@ -228,8 +229,7 @@ window.onload = function() {
        * takes a screenshot of current canvas and sends it to the main process to be saved as a png in local folder
        */
       async function takeScreenshot() {
-        const screenshotTarget = document.getElementById("mainCanvas");
-        const newCanvas = await html2canvas(screenshotTarget);
+        const newCanvas = await html2canvas(mainCanvas);
         const base64image = newCanvas.toDataURL("image/png");
 
         window.electronAPI.sendImage(base64image);
