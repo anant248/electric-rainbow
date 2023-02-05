@@ -53,7 +53,9 @@ const createWindow = () => {
     //var imageInfo = base64ToImage(base64Str, path); //,optionalObj);\\don't knmow how to save this?
     var data = base64Str.replace(/^data:image\/\w+;base64,/, "");
     var buf = Buffer.from(data, "base64");
-    fs.writeFile("./data/image.png", buf, (err) => {
+    let currentDate = new Date().toISOString()
+    let fileName = "img" + currentDate.replace(/:/g, "") + ".png";
+    fs.writeFile("./data/" + fileName, buf, (err) => {
       if (err) console.log(err);
       else {
         console.log("File written successfully\n");
