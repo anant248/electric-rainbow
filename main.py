@@ -76,10 +76,10 @@ def dataSend():
             # trim_pot1_changed = False
             # trim_pot2_changed = False
 
-            # # read the analog pin
-            # trim_pot0 = chan0.value
-            # trim_pot1 = chan1.value
-            # trim_pot2 = chan2.value
+            # read the analog pin
+            trim_pot0 = chan0.value
+            trim_pot1 = chan1.value
+            trim_pot2 = chan2.value
 
             # # how much has it changed since the last read?
             # pot0_adjust = abs(trim_pot0 - last_read_chan0)
@@ -90,8 +90,10 @@ def dataSend():
             #     trim_pot0_changed = True
 
             # if trim_pot_changed:
-            #     # convert 16bit adc0 (0-65535) trim pot read into 0-100 volume level
-            #     set_volume = remap_range(trim_pot, 0, 65535, 0, 100)
+            # convert 16bit adc0 (0-65535) trim pot read into 0-100 volume level
+            set_volume_chan0 = remap_range(trim_pot0, 0, 65535, 0, 255)
+            set_volume_chan1 = remap_range(trim_pot1, 0, 65535, 0, 255)
+            set_volume_chan2 = remap_range(trim_pot2, 0, 65535, 0, 255)
 
             #     # set OS volume playback volume
             #     print('Volume = {volume}%' .format(volume = set_volume))
@@ -118,14 +120,19 @@ def dataSend():
             bts = msgpack.packb(someArr)
             sock.sendall(bts)
             time.sleep(1) # delay in sending data on TCP socket
-            print('Raw ADC Value: ', chan0.value)
-            print('ADC Voltage: ' + str(chan0.voltage) + 'V')
+            print('CH0: ', set_volume_chan0)
+            print('CH1: ', set_volume_chan1)
+            print('CH2: ', set_volume_chan2)
+            print('\n')
+            
+            # print('Raw ADC Value: ', chan0.value)
+            # print('ADC Voltage: ' + str(chan0.voltage) + 'V')
 
-            print('Raw ADC Value: ', chan1.value)
-            print('ADC Voltage: ' + str(chan1.voltage) + 'V')
+            # print('Raw ADC Value: ', chan1.value)
+            # print('ADC Voltage: ' + str(chan1.voltage) + 'V')
 
-            print('Raw ADC Value: ', chan1.value)
-            print('ADC Voltage: ' + str(chan1.voltage) + 'V')
+            # print('Raw ADC Value: ', chan1.value)
+            # print('ADC Voltage: ' + str(chan1.voltage) + 'V')
 
 if __name__ == "__main__":
     print("Running...")
