@@ -6,6 +6,11 @@ import time
 import socket
 import threading
 from random import *
+import busio
+import digitalio
+import board
+import adafruit_mcp3xxx.mcp3008 as MCP
+from adafruit_mcp3xxx.analog_in import AnalogIn
 
 # GPIO Mode (BOARD / BCM)
 GPIO.setmode(GPIO.BCM)
@@ -19,6 +24,22 @@ pin25 = 25 # GPIO25 on the Pi
 GPIO.setup(pin23, GPIO.IN)
 GPIO.setup(pin24, GPIO.IN)
 GPIO.setup(pin25, GPIO.IN)
+
+
+
+# create the spi bus
+spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
+
+# create the cs (chip select)
+cs = digitalio.DigitalInOut(board.D5)
+
+# create the mcp object
+mcp = MCP.MCP3008(spi, cs)
+
+# create an analog input channel on pin 0
+chan = AnalogIn(mcp, MCP.P0)
+
+
 
 def dataSend():
     HOST = "192.168.2.1"
@@ -46,7 +67,9 @@ def dataSend():
             someArr = [r, g, b, x, y, pausePlayButton, clearButton, screenshotButton]
             bts = msgpack.packb(someArr)
             sock.sendall(bts)
-            time.sleep(0.03) # delay in sending data on TCP socket
+            time.sleep(1) # delay in sending data on TCP socket
+            print('Raw ADC Value: ', chan.value)
+            print('ADC Voltage: ' + str(chan.voltage) + 'V')
 
 if __name__ == "__main__":
     print("Running...")
