@@ -11,6 +11,13 @@ import digitalio
 import board
 import adafruit_mcp3xxx.mcp3008 as MCP
 from adafruit_mcp3xxx.analog_in import AnalogIn
+from statistics import mean, median
+
+# Logging in order to send voltage debugging info into a file - in order to visualize remap range
+import logging
+logger = logging.Logger("voltages", logging.DEBUG)
+# fmt = logging.Formatter(format='%(asctime)s %(message)s')
+logger.addHandler(logging.FileHandler(os.path.join(os.getcwd(), "volategs.log"), mode='w+'))
 
 # GPIO Mode (BOARD / BCM)
 GPIO.setmode(GPIO.BCM)
@@ -45,8 +52,14 @@ def remap_range(value, left_min, left_max, right_min, right_max):
     left_span = left_max - left_min
     right_span = right_max - right_min
 
+    # set the value to right_min if it is below left_min
+    if (value <= left_min):
+        return right_min
+    elif (value >= left_max):
+        return right_max
+
     # Convert the left range into a 0-1 range (int)
-    valueScaled = int(value - left_min) / int(left_span)
+    valueScaled = (value - left_min) / (left_span)
 
     # Convert the 0-1 range into a value in the right range.
     return int(right_min + (valueScaled * right_span))
@@ -60,20 +73,33 @@ def dataSend():
         x = 0
         y = 0
         while True:
-            # read the analog pin
-            trim_pot0 = chan0.value
-            trim_pot1 = chan1.value
-            trim_pot2 = chan2.value
+            # read the analog pins
+                        # OPTIOINAL: Average all readings
+            # vArr = []
+            # for i in range(10):
+            #     trim_pot0 = chan0.voltage
+            #     vArr.append(trim_pot0)
+            # trim_pot0 = mean(vArr)
+            
+            trim_pot0 = chan0.voltage
+            # trim_pot1 = chan1.voltage
+            # trim_pot2 = chan2.voltage
 
-            # convert 16bit adc0 (0-65535) trim pot read into 0-100 volume level
-            set_value_chan0 = remap_range(trim_pot0, 0, 65535, 255, 0)
-            set_value_chan1 = remap_range(trim_pot1, 0, 65535, 255, 0)
-            set_value_chan2 = remap_range(trim_pot2, 0, 65535, 255, 0)
+            # convert 16bit adc0 (0-65535) trim pot re
+            # ad into 0-100 volume level
+            set_value_chan0 = remap_range(trim_pot0, 1.95, 2.80, 255, 0)
+            # set_value_chan1 = remap_range(trim_pot1, 0, 65535, 255, 0)
+            # set_value_chan2 = remap_range(trim_pot2, 0, 65535, 255, 0)
 
             r = set_value_chan0
-            g = set_value_chan1
-            b = set_value_chan2
-            x = randint(0, 2000) # generate random number to represent x coordinate of particle
+            g = set_value_chan0  # randint(0, 255) # set_value_chan0 
+            b = set_value_chan0  # randint(0, 255) #set_value_chan0 
+
+            # discard and dont send rgb values that are 255, 255, 255 (white)
+            if r >= 255:
+                continue
+
+            x = randint(0, 2000) # generate random number to represent x coordinate of particle  r/255 * 1500 + randint(0,100)/20
             y = randint(0, 900) # generate random number to represent y coordinate of particle
 
             # assign pin inputs to their respective button readings
@@ -84,10 +110,13 @@ def dataSend():
             someArr = [r, g, b, x, y, pausePlayButton, clearButton, screenshotButton]
             bts = msgpack.packb(someArr)
             sock.sendall(bts)
-            time.sleep(2) # delay in sending data on TCP socket
+            time.sleep(0.03) # delay in sending data on TCP socket
             print('CH0: ', set_value_chan0)
-            print('CH1: ', set_value_chan1)
-            print('CH2: ', set_value_chan2)
+            print('Raw Value: ', chan0.value)
+            print('Voltage: ', chan0.voltage)
+            logger.info(f"{time.time_ns()},{chan0.voltage},{r}")
+           # print('CH1: ', set_value_chan1)
+           # print('CH2: ', set_value_chan2)
             print('\n')
 
             # print('Raw ADC Value: ', chan0.value)
