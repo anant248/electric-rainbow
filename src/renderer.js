@@ -62,6 +62,22 @@ window.onload = function() {
         return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
     }
 
+    /*
+     * Converts hex code to a rgb values needed for animation color properties
+     * 
+     * hex: string representing a color
+     * returns string of rgb value
+     * return hexToRgb("#hexvalue").r returns the r value
+     */
+    function hexToRgb(hex) {
+      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+
       /* Sets initial HTML canvas element properties */
       function setCanvasSize() {
         canvasEl.width = window.innerWidth * 2;
@@ -251,13 +267,17 @@ window.onload = function() {
 
         // take screenshot if screenshot button is 0
         if (instrumentData.screenshotButton == 0) {
-          takeScreenshot();
+          // takeScreenshot();
           console.log("Screenshot taken!")
         }
 
-        // if flag is true (UI is paused), do nothing within autoClick()
+        // if flag is true (UI is paused) or color is white (nothing is being played), do nothing within autoClick()
         // else flag is false (UI is playing), animateParticules()
-        if (window.human) return;
+        let r = hexToRgb(instrumentData.color).r
+        let g = hexToRgb(instrumentData.color).g
+        let b = hexToRgb(instrumentData.color).b
+
+        if (window.human || (r > 250 && g > 250 && b > 250)) return;
         else animateParticules(instrumentData.x, instrumentData.y, instrumentData.color, instrumentData.button, instrumentData.clearButton);
     }
     
