@@ -36,7 +36,7 @@ GPIO.setup(pin25, GPIO.IN)
 spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
 
 # create the cs (chip select)
-cs = digitalio.DigitalInOut(board.D5)
+cs = digitalio.DigitalInOut(board.D22)
 
 # create the mcp object
 mcp = MCP.MCP3008(spi, cs)
@@ -82,21 +82,21 @@ def dataSend():
             # trim_pot0 = mean(vArr)
             
             trim_pot0 = chan0.voltage
-            # trim_pot1 = chan1.voltage
-            # trim_pot2 = chan2.voltage
+            trim_pot1 = chan1.voltage
+            trim_pot2 = chan2.voltage
 
-            # convert 16bit adc0 (0-65535) trim pot re
-            # ad into 0-100 volume level
-            set_value_chan0 = remap_range(trim_pot0, 1.95, 2.80, 255, 0)
-            # set_value_chan1 = remap_range(trim_pot1, 0, 65535, 255, 0)
-            # set_value_chan2 = remap_range(trim_pot2, 0, 65535, 255, 0)
+            # convert 16bit adc0 (0-65535) trim pot read into 0-100 volume level
+            set_value_chan0 = remap_range(trim_pot0, 2.10, 2.35, 255, 0)
+            set_value_chan1 = remap_range(trim_pot1, 1.95, 2.35, 255, 0)
+            set_value_chan2 = remap_range(trim_pot2, 2.0, 2.35, 255, 0)
 
-            r = set_value_chan0
-            g = set_value_chan0  # randint(0, 255) # set_value_chan0 
-            b = set_value_chan0  # randint(0, 255) #set_value_chan0 
+            r = set_value_chan0  # set_value_chan0
+            g = set_value_chan1  # set_value_chan1
+            b = set_value_chan2  # set_value_chan2
+            logger.info(f"{time.time_ns()},{chan0.voltage},{chan1.voltage},{chan2.voltage}")
 
             # discard and dont send rgb values that are 255, 255, 255 (white)
-            if r >= 255:
+            if r >= 250 and g >= 250 and b >= 250:
                 continue
 
             x = randint(0, 2000) # generate random number to represent x coordinate of particle  r/255 * 1500 + randint(0,100)/20
@@ -111,22 +111,13 @@ def dataSend():
             bts = msgpack.packb(someArr)
             sock.sendall(bts)
             time.sleep(0.03) # delay in sending data on TCP socket
-            print('CH0: ', set_value_chan0)
-            print('Raw Value: ', chan0.value)
-            print('Voltage: ', chan0.voltage)
-            logger.info(f"{time.time_ns()},{chan0.voltage},{r}")
-           # print('CH1: ', set_value_chan1)
-           # print('CH2: ', set_value_chan2)
+            print('CH0: ', r)
+            print('Voltage: ', trim_pot0)
+            print('CH1: ', g)
+            print('Voltage: ', trim_pot1)
+            print('CH2: ', b)
+            print('Voltage: ', trim_pot2)
             print('\n')
-
-            # print('Raw ADC Value: ', chan0.value)
-            # print('ADC Voltage: ' + str(chan0.voltage) + 'V')
-
-            # print('Raw ADC Value: ', chan1.value)
-            # print('ADC Voltage: ' + str(chan1.voltage) + 'V')
-
-            # print('Raw ADC Value: ', chan1.value)
-            # print('ADC Voltage: ' + str(chan1.voltage) + 'V')
 
 if __name__ == "__main__":
     print("Running...")
