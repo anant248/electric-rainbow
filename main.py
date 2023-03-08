@@ -86,9 +86,9 @@ def dataSend():
             trim_pot2 = chan2.voltage
 
             # convert 16bit adc0 (0-65535) trim pot read into 0-100 volume level
-            set_value_chan0 = remap_range(trim_pot0, 2.10, 2.35, 255, 0)
-            set_value_chan1 = remap_range(trim_pot1, 1.95, 2.35, 255, 0)
-            set_value_chan2 = remap_range(trim_pot2, 2.0, 2.35, 255, 0)
+            set_value_chan0 = remap_range(trim_pot0, 2.10, 2.80, 255, 0)
+            set_value_chan1 = remap_range(trim_pot1, 2.10, 2.50, 255, 0)
+            set_value_chan2 = remap_range(trim_pot2, 2.10, 3.00, 255, 0)
 
             r = set_value_chan0  # set_value_chan0
             g = set_value_chan1  # set_value_chan1
