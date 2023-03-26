@@ -234,6 +234,12 @@ window.onload = function() {
               easing: 'easeOutExpo',
               update: renderParticule,
               offset: 0
+            })
+            .add({
+              duration: 200,
+              update: function() {
+                ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+              }
             });
         }
 
@@ -258,7 +264,7 @@ window.onload = function() {
             window.human = false;
         }
 
-        if (clearButton == 0) { // clear canvas - this instance only gets triggered if canvas is cleared while UI is playing
+        if (clearButton == 1) { // clear canvas - this instance only gets triggered if canvas is cleared while UI is playing
             console.log("Clearing Canvas now: ", clearButton);
             ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
         }
@@ -300,7 +306,7 @@ window.onload = function() {
         if (instrumentData.button == 1) window.human = false;
 
         // clear canvas if UI is paused
-        if (instrumentData.button == 0 && instrumentData.clearButton == 0) {
+        if (instrumentData.button == 0 && instrumentData.clearButton == 1) {
           console.log("Clearing Canvas now: ", instrumentData.clearButton);
           ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
         }
