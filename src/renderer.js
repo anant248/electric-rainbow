@@ -22,9 +22,15 @@ window.onload = function() {
         var pausePlayButton = dataArray[5];
         var clearButton = dataArray[6];
         var screenshotButton = dataArray[7];
+        var animationMode1 = dataArray[8];
+        var animationMode2 = dataArray[9];
+        var grayscale = dataArray[10];
+        var fullOutput = dataArray[11];
         
+        var animationColor = grayscale ? rgbToHex(fullOutput, fullOutput, fullOutput) : rgbToHex(r, g, b);
+
         // Render methods to be called each time data is recieved
-        changeParticle(rgbToHex(r, g, b), xCoordinate, yCoordinate, pausePlayButton, clearButton, screenshotButton);
+        changeParticle(animationColor, xCoordinate, yCoordinate, pausePlayButton, clearButton, screenshotButton, animationMode1, animationMode2, grayscale);
         autoClick();
     })
     
@@ -37,13 +43,16 @@ window.onload = function() {
     var numberOfParticules = 30;
 
     var instrumentData = {}; // Globally scoped object
-    var changeParticle = (newColor, newXCoordinate, newYCoordinate, newButton, newClear, newScreenshot) => {
+    var changeParticle = (newColor, newXCoordinate, newYCoordinate, newButton, newClear, newScreenshot, newAnimationMode1, newAnimationMode2, newGrayscale) => {
         instrumentData.color = newColor;
         instrumentData.x = newXCoordinate;
         instrumentData.y = newYCoordinate;
         instrumentData.button = newButton;
         instrumentData.clearButton = newClear;
         instrumentData.screenshotButton = newScreenshot;
+        instrumentData.animationMode1 = newAnimationMode1;
+        instrumentData.animationMode2 = newAnimationMode2;
+        instrumentData.grayscale = newGrayscale;
     }
     
     /* Helper function to rgbToHex */
@@ -163,7 +172,7 @@ window.onload = function() {
        * x: x coordinate of particle on canvas. This properties is affected by recieved input data
        * y: y coordinate of particle on canvas. This properties is affected by recieved input data
        */
-      function animateParticules(x, y, color, pausePlayButton, clearButton) {
+      function animateParticules(x, y, color, pausePlayButton, clearButton, animationMode1, animationMode2) {
         var circle = createCircle(x, y, color);
         var particules = [];
         for (var i = 0; i < numberOfParticules; i++) {
@@ -172,30 +181,61 @@ window.onload = function() {
 
         var fireworkTimeline = new anime.timeline({ })
         
-        fireworkTimeline
-          // .add({
-          //   targets: particules,
-          //   x: function(p) { return p.endPos.x; },
-          //   y: function(p) { return p.endPos.y; },
-          //   radius: 0.1,
-          //   duration: anime.random(500, 2000),
-          //   easing: 'easeOutExpo',
-          //   update: renderParticule
-          // })
-          .add({
-          targets: circle,
-          radius: anime.random(80, 160),
-          lineWidth: 0,
-          alpha: {
-            value: 0,
-            easing: 'linear',
-            duration: anime.random(600, 800),  
-          },
-          duration: anime.random(1200, 1800),
-          easing: 'easeOutExpo',
-          update: renderParticule,
-          offset: 0
-        });
+        if (animationMode1 && animationMode2) { // spiky gui mode
+          fireworkTimeline
+            .add({
+              targets: particules,
+              x: function(p) { return p.endPos.x; },
+              y: function(p) { return p.endPos.y; },
+              radius: 0.1,
+              duration: anime.random(500, 2000),
+              easing: 'easeOutExpo',
+              update: renderParticule
+            });
+        }
+        else if (!animationMode1 && animationMode2) { // circly gui
+          fireworkTimeline
+            .add({
+              targets: circle,
+              radius: anime.random(80, 160),
+              lineWidth: 0,
+              alpha: {
+                value: 0,
+                easing: 'linear',
+                duration: anime.random(600, 800),  
+              },
+              duration: anime.random(1200, 1800),
+              easing: 'easeOutExpo',
+              update: renderParticule,
+              offset: 0
+            });
+        }
+        else { // jamming mode
+          fireworkTimeline
+            .add({
+              targets: particules,
+              x: function(p) { return p.endPos.x; },
+              y: function(p) { return p.endPos.y; },
+              radius: 0.1,
+              duration: anime.random(500, 2000),
+              easing: 'easeOutExpo',
+              update: renderParticule
+            })
+            .add({
+              targets: circle,
+              radius: anime.random(80, 160),
+              lineWidth: 0,
+              alpha: {
+                value: 0,
+                easing: 'linear',
+                duration: anime.random(600, 800),  
+              },
+              duration: anime.random(1200, 1800),
+              easing: 'easeOutExpo',
+              update: renderParticule,
+              offset: 0
+            });
+        }
 
         // button handling: each time animation is called, check the status of the buttons
         fireworkTimeline.finished.then(checkButtons(fireworkTimeline, pausePlayButton, clearButton));
@@ -278,7 +318,8 @@ window.onload = function() {
         let b = hexToRgb(instrumentData.color).b
 
         if (window.human || (r > 250 && g > 250 && b > 250)) return;
-        else animateParticules(instrumentData.x, instrumentData.y, instrumentData.color, instrumentData.button, instrumentData.clearButton);
+        else animateParticules(instrumentData.x, instrumentData.y, instrumentData.color, instrumentData.button, 
+                               instrumentData.clearButton, instrumentData.animationMode1, instrumentData.animationMode2);
     }
     
     // initialize canvas
