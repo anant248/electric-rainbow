@@ -193,7 +193,7 @@ window.onload = function() {
               update: renderParticule
             });
         }
-        else if (!animationMode1 && animationMode2) { // circly gui
+        else if (animationMode1 && !animationMode2) { // circly gui
           fireworkTimeline
             .add({
               targets: circle,
@@ -323,7 +323,7 @@ window.onload = function() {
         let g = hexToRgb(instrumentData.color).g
         let b = hexToRgb(instrumentData.color).b
 
-        if (window.human || (r > 250 && g > 250 && b > 250)) return;
+        if (window.human || ((r > 250 && g > 250 && b > 250) && instrumentData.clearButton != 1)) return;
         else animateParticules(instrumentData.x, instrumentData.y, instrumentData.color, instrumentData.button, 
                                instrumentData.clearButton, instrumentData.animationMode1, instrumentData.animationMode2);
     }
