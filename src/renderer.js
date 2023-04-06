@@ -1,6 +1,8 @@
 window.onload = function() {
     const counter = document.getElementById('counter');
     const mainCanvas = document.getElementById('mainCanvas');
+    var lastView;
+    var currentView
     
     /* 
      * This function is a callback to data being recieved on the raspberry-pi-data channel
@@ -11,7 +13,7 @@ window.onload = function() {
     window.electronAPI.onUpdateUI((_event, dataArray) => {
         
         // updates the counter on the UI (dev)
-        counter.innerText = dataArray
+        //counter.innerText = dataArray
         
         // Store each element of input array into corresponding UI change task
         var r = dataArray[0];
@@ -22,10 +24,81 @@ window.onload = function() {
         var pausePlayButton = dataArray[5];
         var clearButton = dataArray[6];
         var screenshotButton = dataArray[7];
+        currentView = dataArray[8]; // 1 => animations view. 0 => feedback view
+        var musicData = dataArray[9];
         
-        // Render methods to be called each time data is recieved
-        changeParticle(rgbToHex(r, g, b), xCoordinate, yCoordinate, pausePlayButton, clearButton, screenshotButton);
-        autoClick();
+        if (currentView == 0) {
+          //var fireworkCanvas = document.getElementById("mainCanvas");
+
+          // fireworkCanvas.style.display = "none"; // Hide the div
+          const feedbackCanvas = document.getElementById("mainCanvas");//document.querySelector(".feedback");
+          // feedbackCanvas.style = ""
+          // feedbackCanvas.style.width = 400;
+          // feedbackCanvas.style.height = 400; //feedbackCanvas.parentNode.clientHeight;
+          
+          const ctx = feedbackCanvas.getContext("2d");
+
+          // Get note and pitch elements
+          const note = document.getElementById("left-text");
+          const pitch = document.getElementById("right-text");
+          document.getElementById("panel-left").style.display = "inline";
+          document.getElementById("panel-right").style.display = "inline";
+
+          // Set up animation loop
+          function animate() {
+            // Clear canvas
+            ctx.clearRect(0, 0, feedbackCanvas.width, feedbackCanvas.height);
+
+            const values = musicData[2];
+            const barWidth = feedbackCanvas.width / values.length;
+            const barHeight = feedbackCanvas.height / 2;
+            ctx.fillStyle = "blue";
+
+
+
+            for (let i = 0; i < values.length; i++) {
+              const value = values[i];
+              const x = i * barWidth;
+              
+              const y = (barHeight) * (value / 255);//barHeight - value * barHeight;
+              ctx.fillRect(x, y, barWidth, value * barHeight);
+            }
+
+            // Set note and pitch text
+            if(musicData[1] != "") note.textContent = "Note: " + musicData[1];
+            if(musicData[0] != "") pitch.textContent = "Pitch: " + musicData[0];
+            //console.log("here")
+            lastView = 0;
+          }
+
+          // Start animation loop
+          animate();
+        } else {
+
+          // if the last view was feedback then clear the screen before rendering
+          if (lastView == 0){
+            const canvas = document.querySelector(".fireworks");
+            //canvas.style.display = "inline"; // show the div
+            document.getElementById("panel-left").style.display = "none";
+            document.getElementById("panel-right").style.display = "none";
+            // const fedbackCanvas = document.querySelector(".feedback");
+            // fedbackCanvas.style.display = "none";
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            lastView = 1;
+          }
+          // Render methods to be called each time data is recieved
+          changeParticle(
+            rgbToHex(r, g, b),
+            xCoordinate,
+            yCoordinate,
+            pausePlayButton,
+            clearButton,
+            screenshotButton
+          );
+          autoClick();
+        }
+
     })
     
     // flag that changes based on pause/play button
@@ -80,11 +153,24 @@ window.onload = function() {
 
       /* Sets initial HTML canvas element properties */
       function setCanvasSize() {
-        canvasEl.width = window.innerWidth * 2;
-        canvasEl.height = window.innerHeight * 2;
-        canvasEl.style.width = window.innerWidth + 'px';
-        canvasEl.style.height = window.innerHeight + 'px';
-        canvasEl.getContext('2d').scale(2, 2);
+        if (currentView == 0){
+          // canvasEl.width = canvasEl.parentNode.clientWidth;
+          // canvasEl.height = canvasEl.parentNode.clientHeight;
+          // canvasEl.style.width = canvasEl.parentNode.clientWidth;
+          // canvasEl.style.height = canvasEl.parentNode.clientHeight;
+
+          // canvasEl.getContext('2d').scale(2, 2);
+          console.log("currentView = 0")
+
+        } else {
+          canvasEl.width = window.innerWidth * 2;
+          canvasEl.height = window.innerHeight * 2;
+          canvasEl.style.width = window.innerWidth + 'px';
+          canvasEl.style.height = window.innerHeight + 'px';
+          canvasEl.getContext('2d').scale(2, 2);
+        }
+
+
         // ctx.fillStyle = "black";
         // ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
       }
@@ -267,7 +353,7 @@ window.onload = function() {
 
         // take screenshot if screenshot button is 0
         if (instrumentData.screenshotButton == 0) {
-          // takeScreenshot();
+          takeScreenshot();
           console.log("Screenshot taken!")
         }
 

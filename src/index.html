@@ -10,7 +10,16 @@
     <title>Electric Rainbow</title>
 </head>
 <body>
-    <canvas class="fireworks" id="mainCanvas" style="border:1px solid #000000"></canvas>
+    <div style="display:flex; flex-direction: row; justify-content: center; align-items: center">
+        <div id="panel-left" style="border:1px solid #000000"><div class="panel-content" id="left-text">left</div></div>
+        <div id="canvas-container">
+            <canvas class="fireworks" id="mainCanvas" style="border:1px solid #000000"></canvas>
+        </div> 
+        <!-- <canvas class="feedback" id="feedback" width="400" height="400"></canvas> -->
+        <div id="panel-right" style="border:1px solid #000000"><div class="panel-content" id="right-text">right</div></div>
+    </div>
+    
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.5/dist/html2canvas.min.js"></script>

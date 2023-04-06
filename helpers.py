@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import aubio
+import pyaudio
 import board
 import busio
 import digitalio
@@ -67,6 +71,22 @@ def recordAudio():
         wav_file.writeframes(audio_data)
 
 
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100
+CHUNK = 1024
+
+audio = pyaudio.PyAudio()
+
+stream = audio.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    frames_per_buffer=CHUNK)
+
+
+
+
 def analyze_music_file(filename):
     # Load audio file
     y, sr = librosa.load(filename)
@@ -88,3 +108,62 @@ def analyze_music_file(filename):
     notes = [librosa.midi_to_note(pitch) for pitch in pitches]
 
     return duration, (min_note, max_note), notes
+
+# Set up parameters for audio recording
+FORMAT2 = pyaudio.paFloat32
+BUFFER_SIZE = CHUNK // 2
+
+# Open input stream from default microphone
+stream2 = audio.open(format=FORMAT2,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    frames_per_buffer=CHUNK)
+
+# Set up beat detection object
+beat_detector = aubio.tempo("default", BUFFER_SIZE, CHUNK, RATE)
+
+# Set up plot
+fig, ax = plt.subplots()
+ax.set_ylim([0, 1])
+x = np.arange(0, CHUNK // 2)
+line, = ax.plot(x, np.zeros(CHUNK // 2))
+
+# Loop over audio stream and detect beats
+while True:
+    # Read audio data from stream
+    data = stream2.read(CHUNK, exception_on_overflow=False)
+    samples = np.frombuffer(data, dtype=aubio.float_type)
+
+    # Perform beat detection
+    is_beat = beat_detector(samples)
+
+    # Plot beat
+    if is_beat:
+        line.set_ydata(np.ones(CHUNK // 2))
+    else:
+        line.set_ydata(np.zeros(CHUNK // 2))
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
+
+# Define the analog input channel to be read
+chan = AnalogIn(mcp, MCP.P0)
+# Define the number of samples to be taken
+num_samples = 1000
+#measure the effective sampling rate of the pi's pin
+
+
+def measureSampleRate(channel, num_samples=1000):
+    # Take samples and measure the time it takes to complete the channel
+    start_time = time.monotonic()
+    for i in range(num_samples):
+        value = channel.value
+    end_time = time.monotonic()
+
+    # Calculate the sample rate in Hz
+    sample_rate = num_samples / (end_time - start_time)
+
+    print(f"Sample rate: {sample_rate:.2f} Hz")
+
+    return sample_rate
