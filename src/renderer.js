@@ -38,9 +38,21 @@ window.onload = function() {
     // true when UI is paused, false otherwise
     window.human = true;
 
+    // flag specifically for rgb difference animation
+    // true when difference between previous rgb and current rgb is greater than 10
+    window.renderRgbDifference = true;
+
+    // flag for background color - true is background is black, false otherwise
+    window.blackBackground = false;
+
     var canvasEl = document.querySelector('.fireworks');
     var ctx = canvasEl.getContext('2d');
     var numberOfParticules = 30;
+
+    // store previous rgb values
+    var lastr = 255
+    var lastg = 255
+    var lastb = 255
 
     var instrumentData = {}; // Globally scoped object
     var changeParticle = (newColor, newXCoordinate, newYCoordinate, newButton, newClear, newScreenshot, newAnimationMode1, newAnimationMode2, newGrayscale) => {
@@ -179,72 +191,92 @@ window.onload = function() {
           particules.push(createParticule(x, y, color));
         }
 
-        var fireworkTimeline = new anime.timeline({ })
-        
-        if (animationMode1 && animationMode2) { // spiky gui mode
-          fireworkTimeline
-            .add({
-              targets: particules,
-              x: function(p) { return p.endPos.x; },
-              y: function(p) { return p.endPos.y; },
-              radius: 0.1,
-              duration: anime.random(500, 2000),
-              easing: 'easeOutExpo',
-              update: renderParticule
-            });
-        }
-        else if (animationMode1 && !animationMode2) { // circly gui
-          fireworkTimeline
-            .add({
-              targets: circle,
-              radius: anime.random(80, 160),
-              lineWidth: 0,
-              alpha: {
-                value: 0,
-                easing: 'linear',
-                duration: anime.random(600, 800),  
-              },
-              duration: anime.random(1200, 1800),
-              easing: 'easeOutExpo',
-              update: renderParticule,
-              offset: 0
-            });
-        }
-        else { // jamming mode
-          fireworkTimeline
-            .add({
-              targets: particules,
-              x: function(p) { return p.endPos.x; },
-              y: function(p) { return p.endPos.y; },
-              radius: 0.1,
-              duration: anime.random(500, 2000),
-              easing: 'easeOutExpo',
-              update: renderParticule
-            })
-            .add({
-              targets: circle,
-              radius: anime.random(80, 160),
-              lineWidth: 0,
-              alpha: {
-                value: 0,
-                easing: 'linear',
-                duration: anime.random(600, 800),  
-              },
-              duration: anime.random(1200, 1800),
-              easing: 'easeOutExpo',
-              update: renderParticule,
-              offset: 0
-            })
-            .add({
-              duration: 200,
-              update: function() {
-                ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-              }
-            });
-        }
+        var fireworkTimeline = new anime.timeline({ });
 
-        // button handling: each time animation is called, check the status of the buttons
-        fireworkTimeline.finished.then(checkButtons(fireworkTimeline, pausePlayButton, clearButton));
+        if (!window.renderRgbDifference) {
+          checkButtons(fireworkTimeline, pausePlayButton, clearButton);
+        }
+        else {
+          if (animationMode1 && animationMode2) { // spiky gui mode
+            // if canvas background is black switch to white, else do nothing
+            if (window.blackBackground) {
+              ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+              window.blackBackground = false;
+            }
+
+            fireworkTimeline
+              .add({
+                targets: particules,
+                x: function(p) { return p.endPos.x; },
+                y: function(p) { return p.endPos.y; },
+                radius: 0.1,
+                duration: anime.random(500, 2000),
+                easing: 'easeOutExpo',
+                update: renderParticule
+              });
+          }
+          else if (animationMode1 && !animationMode2) { // circly gui
+            // if canvas background is black switch to white, else do nothing
+            if (window.blackBackground) {
+              ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+              window.blackBackground = false;
+            }
+
+            fireworkTimeline
+              .add({
+                targets: circle,
+                radius: anime.random(80, 160),
+                lineWidth: 0,
+                alpha: {
+                  value: 0,
+                  easing: 'linear',
+                  duration: anime.random(600, 800),  
+                },
+                duration: anime.random(1200, 1800),
+                easing: 'easeOutExpo',
+                update: renderParticule,
+                offset: 0
+              });
+          }
+          else { // jamming mode
+            fireworkTimeline
+              .add({
+                targets: particules,
+                x: function(p) { return p.endPos.x; },
+                y: function(p) { return p.endPos.y; },
+                radius: 0.1,
+                duration: anime.random(500, 2000),
+                easing: 'easeOutExpo',
+                update: renderParticule
+              })
+              .add({
+                targets: circle,
+                radius: anime.random(80, 160),
+                lineWidth: 0,
+                alpha: {
+                  value: 0,
+                  easing: 'linear',
+                  duration: anime.random(600, 800),  
+                },
+                duration: anime.random(1200, 1800),
+                easing: 'easeOutExpo',
+                update: renderParticule,
+                offset: 0
+              })
+              .add({
+                duration: 200,
+                update: function() {
+                  // ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+                  ctx.fillStyle = "black";
+                  ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+                  window.blackBackground = true;
+                }
+              });
+          }
+        
+          // button handling: each time animation is called, check the status of the buttons
+          fireworkTimeline.finished.then(checkButtons(fireworkTimeline, pausePlayButton, clearButton));
+        }
       }
 
       /* Checks the status of the pause/play and clear button
@@ -322,6 +354,20 @@ window.onload = function() {
         let r = hexToRgb(instrumentData.color).r
         let g = hexToRgb(instrumentData.color).g
         let b = hexToRgb(instrumentData.color).b
+
+        // check if previous rgb is different enough from current rgb
+        const rgbThresholdDifference = 20
+        const midDifference = 30
+
+        if (Math.abs(lastr - r) > rgbThresholdDifference || Math.abs(lastg - g) > midDifference || Math.abs(lastb - b) > rgbThresholdDifference) {
+          window.renderRgbDifference = true;
+        }
+        else {
+          window.renderRgbDifference = false;
+        }
+
+        // the sexy way
+        // window.renderRgbDifference = Math.abs(lastr - r) > 10 || Math.abs(lastg - g) > 10 || Math.abs(lastb - b) > 10 ? true : false;
 
         if (window.human || ((r > 250 && g > 250 && b > 250) && instrumentData.clearButton != 1)) return;
         else animateParticules(instrumentData.x, instrumentData.y, instrumentData.color, instrumentData.button, 
