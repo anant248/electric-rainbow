@@ -1,5 +1,4 @@
 window.onload = function() {
-    const counter = document.getElementById('counter');
     const mainCanvas = document.getElementById('mainCanvas');
     
     /* 
@@ -9,9 +8,6 @@ window.onload = function() {
      * dataArray: an array of integers being received from the python client which is reading the raspberry pi
      */
     window.electronAPI.onUpdateUI((_event, dataArray) => {
-        
-        // updates the counter on the UI (dev)
-        counter.innerText = dataArray
         
         // Store each element of input array into corresponding UI change task
         var r = dataArray[0];
@@ -42,7 +38,7 @@ window.onload = function() {
     // true when difference between previous rgb and current rgb is greater than 10
     window.renderRgbDifference = true;
 
-    // flag for background color - true is background is black, false otherwise
+    // flag for background color - true if background is black, false otherwise
     window.blackBackground = false;
 
     var canvasEl = document.querySelector('.fireworks');
@@ -106,8 +102,6 @@ window.onload = function() {
         canvasEl.style.width = window.innerWidth + 'px';
         canvasEl.style.height = window.innerHeight + 'px';
         canvasEl.getContext('2d').scale(2, 2);
-        // ctx.fillStyle = "black";
-        // ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
       }
       
       /* Sets size and direction of particle on canvas */
@@ -171,7 +165,8 @@ window.onload = function() {
       
       /* Renders the static particle object
        * 
-       * anim: ...
+       * anim: the object that stores elements to be drawn
+       * Called as an update method to each firework timeline
        */
       function renderParticule(anim) {
         for (var i = 0; i < anim.animatables.length; i++) {
@@ -193,6 +188,8 @@ window.onload = function() {
 
         var fireworkTimeline = new anime.timeline({ });
 
+        // if difference between last data and current data does not meet threshold, don't render animations
+        // but continue to check the buttons, else render animations and check buttons
         if (!window.renderRgbDifference) {
           checkButtons(fireworkTimeline, pausePlayButton, clearButton);
         }
@@ -266,7 +263,6 @@ window.onload = function() {
               .add({
                 duration: 200,
                 update: function() {
-                  // ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
                   ctx.fillStyle = "black";
                   ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
                   window.blackBackground = true;
@@ -321,6 +317,7 @@ window.onload = function() {
 
       /* 
        * takes a screenshot of current canvas and sends it to the main process to be saved as a png in local folder
+       * TODO: implement screenshot functionality
        */
       async function takeScreenshot() {
         const newCanvas = await html2canvas(mainCanvas);
@@ -357,7 +354,7 @@ window.onload = function() {
 
         // check if previous rgb is different enough from current rgb
         const rgbThresholdDifference = 20
-        const midDifference = 30
+        const midDifference = 30 // since mids are dominant, we use a greater mid difference
 
         if (Math.abs(lastr - r) > rgbThresholdDifference || Math.abs(lastg - g) > midDifference || Math.abs(lastb - b) > rgbThresholdDifference) {
           window.renderRgbDifference = true;
@@ -365,9 +362,6 @@ window.onload = function() {
         else {
           window.renderRgbDifference = false;
         }
-
-        // the sexy way
-        // window.renderRgbDifference = Math.abs(lastr - r) > 10 || Math.abs(lastg - g) > 10 || Math.abs(lastb - b) > 10 ? true : false;
 
         if (window.human || ((r > 250 && g > 250 && b > 250) && instrumentData.clearButton != 1)) return;
         else animateParticules(instrumentData.x, instrumentData.y, instrumentData.color, instrumentData.button, 
