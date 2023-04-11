@@ -107,7 +107,7 @@ def dataSend():
             grayscale = GPIO.input(pinA)
             screenshotButton = 1
 
-            if (animationMode1 and animationMode2): # in jamming mode, x and y is random
+            if (not animationMode1 and not animationMode2): # in jamming mode, x and y is random
                 x = random()
                 y = random()
 
@@ -115,6 +115,9 @@ def dataSend():
                 # come up with x and y algorithm
                 x = random()
                 y = random()
+                # x = float(g/510)
+                # y = float(math.sqrt((g/510)**2 - x**2))
+                # y = float((g+b)/(1020**2))
 
             someArr = [r, g, b, x, y, pausePlayButton, clearButton, screenshotButton, animationMode1, animationMode2, grayscale, fullOutput]
             bts = msgpack.packb(someArr)
