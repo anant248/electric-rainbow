@@ -4,6 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+msgpack = "*"
+adafruit-circuitpython-ads1x15 = "*"
+pandas = "*"
 
 [dev-packages]
 

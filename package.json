@@ -1,22 +1,20 @@
 {
+  "dependencies": {
+    "base64-to-image": "^1.0.2",
+    "html2canvas": "^1.4.1",
+    "msgpackr": "^1.8.5"
+  },
   "name": "electric-rainbow",
   "version": "1.0.0",
-  "description": "Audio visualizer and learning tool - a final year engineering capstone",
-  "main": "colorCode.js",
+  "main": "src/main.js",
+  "devDependencies": {
+    "electron": "^24.0.0"
+  },
   "scripts": {
+    "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/anant248/electric-rainbow.git"
-  },
-  "author": "Anant Goyal",
+  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/anant248/electric-rainbow/issues"
-  },
-  "homepage": "https://github.com/anant248/electric-rainbow#readme",
-  "dependencies": {
-    "rpio": "^8.18.0"
-  }
+  "description": ""
 }
